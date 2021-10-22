@@ -87,7 +87,10 @@ NoACLsPreCreate(
 
 	if (Cbd->Iopb->MajorFunction == IRP_MJ_NETWORK_QUERY_OPEN)
 		return FLT_PREOP_DISALLOW_FASTIO;
-	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
+
+    //PFILE_OBJECT var4 = FltObjects->FileObject;
+	//return FLT_PREOP_SUCCESS_WITH_CALLBACK;
+    return FLT_PREOP_SYNCHRONIZE;
 }
 
 FLT_POSTOP_CALLBACK_STATUS
@@ -101,18 +104,28 @@ NoACLsPostCreate (
     UNREFERENCED_PARAMETER( CompletionContext );
     UNREFERENCED_PARAMETER( Flags );
 
+    PFILE_OBJECT var4 = FltObjects->FileObject;
+    //UNICODE_STRING a;
+    //RtlInitUnicodeString(&a, L"system.img");
+    //if (FsRtlIsNameInExpression(&a, &var4->FileName, TRUE, NULL)) {
+    //    DbgPrint("Handling %wZ req! status = %x", &var4->FileName, Data->IoStatus.Status);
+    //}
+
 	if (Data->IoStatus.Status == STATUS_ACCESS_DENIED)
 	{
-		PFILE_OBJECT var4 = FltObjects->FileObject;
-
 		if ( !var4 || !((var4->Flags >> 21) & 1)) // FO_FILE_OPEN_CANCELLED
 		{
+            DbgPrint("Handling denied %wZ req! flags = %x", &var4->FileName, var4->Flags);
 			PIO_SECURITY_CONTEXT var5 = Data->Iopb->Parameters.Create.SecurityContext;
 			ACCESS_MASK var6 = var5->DesiredAccess;
-			var5->DesiredAccess = 0;
+			//var5->DesiredAccess = 0;
+            //var5->AccessState->Flags = TOKEN_HAS_BACKUP_PRIVILEGE | TOKEN_HAS_IMPERSONATE_PRIVILEGE | TOKEN_HAS_RESTORE_PRIVILEGE | TOKEN_HAS_TRAVERSE_PRIVILEGE | TOKEN_HAS_OWN_CLAIM_ATTRIBUTES;
+            var5->AccessState->PreviouslyGrantedAccess = var6;
+            //var5->AccessState->SecurityEvaluated = TRUE;
 			FltSetCallbackDataDirty(Data);
 			FltReissueSynchronousIo(FltObjects->Instance, Data);
-			var5->DesiredAccess = var6;
+            DbgPrint("Finished Handling denied %wZ req, original DesiredAccess: %x!", &var4->FileName, var6);
+			//var5->DesiredAccess = var6;
 			FltSetCallbackDataDirty(Data);
 		}
 
