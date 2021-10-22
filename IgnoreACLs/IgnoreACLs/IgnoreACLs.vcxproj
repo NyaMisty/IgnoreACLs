@@ -166,11 +166,17 @@
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(DDK_LIB_PATH)\fltMgr.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>C:\Windows\sysnative\cmd.exe /c copy $(SolutionDir)$(Platform)\$(ConfigurationName)\IgnoreACLs.sys C:\Windows\System32\Drivers</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(DDK_LIB_PATH)\fltMgr.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>C:\Windows\sysnative\cmd.exe /c copy $(SolutionDir)$(Platform)\$(ConfigurationName)\IgnoreACLs.sys C:\Windows\System32\Drivers</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Inf Include="IgnoreACLs.inf" />
